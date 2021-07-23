@@ -22,6 +22,7 @@ foreach ($employee in $response.data)
 {
     $person  = @{};
     $person['ExternalId'] = $employee.attributes.id.value
+    $person['DisplayName'] = $employee.attributes.last_name.value + ", " + $employee.attributes.first_name.value
     if ($employee.attributes.status.value -eq "Inactive" -and [string]::IsNullOrEmpty($person['ExternalId']) -eq $true)
     {
         Write-Verbose -Verbose "Skipped inactive: " + $person['ExternalId']
@@ -37,7 +38,7 @@ foreach ($employee in $response.data)
         switch ($prop.Name)
         {
             "office" { $person[$prop.Name] = "$(($prop.Value).value.attributes.name)"; }
-            "team" { $person[$prop.Name] = "$(($prop.Value).value.attributes.name)"; }
+            "team" { }
             "department" { }
             "supervisor" { }
             "hire_date" { }
@@ -56,8 +57,11 @@ foreach ($employee in $response.data)
             "department" { 
                 $contract['DepartmentName'] = "$(($prop.Value).value.attributes.name)"; 
                 $contract['DepartmentNumber'] = "$(($prop.Value).value.attributes.id)";}
+            "team" { $contract[$prop.Name] = "$(($prop.Value).value.attributes.name)"; }
+            "office" { $contract[$prop.Name] = "$(($prop.Value).value.attributes.name)"; }
             "position" { $contract['JobTitle'] = "$(($prop.Value).value)"; }
-            "supervisor" { $contract['ManagerExternalId'] = "$(($prop.Value).value.attributes.id)"; }
+            "supervisor" { $contract['ManagerExternalId'] = "$(($prop.Value).value.attributes.id.value)"; }
+            "employment_type" { $contract['type'] = "$(($prop.Value).value)"; }
             "cost_centers" { $contract['Costcenter'] = "$(($prop.Value).value.attributes.name)"; }
             "hire_date" { if ([string]::IsNullOrEmpty($(($prop.Value).value))) { $contract['StartDate'] = $null } else { $contract['StartDate'] = Get-date("$(($prop.Value).value)") -format 'o'; } }
             "termination_date" { if ([string]::IsNullOrEmpty($(($prop.Value).value))) { $contract['EndDate'] = $null } else { $contract['EndDate'] = Get-date("$(($prop.Value).value)") -format 'o'; } }
