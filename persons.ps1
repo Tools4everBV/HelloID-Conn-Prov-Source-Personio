@@ -43,6 +43,8 @@ foreach ($employee in $response.data)
             "supervisor" { }
             "hire_date" { }
             "termination_date" { }
+            "last_working_day" { }
+            "contract_end_date" { }
             "cost_centers" { }
 		    Default { $person[$prop.Name] = "$(($prop.Value).value)"; }
 	    }
@@ -64,8 +66,32 @@ foreach ($employee in $response.data)
             "employment_type" { $contract['type'] = "$(($prop.Value).value)"; }
             "cost_centers" { $contract['Costcenter'] = "$(($prop.Value).value.attributes.name)"; }
             "hire_date" { if ([string]::IsNullOrEmpty($(($prop.Value).value))) { $contract['StartDate'] = $null } else { $contract['StartDate'] = Get-date("$(($prop.Value).value)") -format 'o'; } }
-            "termination_date" { if ([string]::IsNullOrEmpty($(($prop.Value).value))) { $contract['EndDate'] = $null } else { $contract['EndDate'] = Get-date("$(($prop.Value).value)") -format 'o'; } }
+            "termination_date" { }
+            "last_working_day" { }
+            "contract_end_date" { }
        }
+    }
+    if ([string]::IsNullOrEmpty($employee.attributes.termination_date.value)) 
+    { 
+        if ([string]::IsNullOrEmpty($employee.attributes.last_working_day.value)) 
+        { 
+            if ([string]::IsNullOrEmpty($employee.attributes.contract_end_date.value)) 
+            { 
+                $contract['EndDate'] = $null 
+            }
+            else 
+            {
+                $contract['EndDate'] = Get-date($employee.attributes.contract_end_date.value) -format 'o'; 
+            }
+        }
+        else 
+        {
+            $contract['EndDate'] = Get-date($employee.attributes.last_working_day.value) -format 'o'; 
+        }
+    } 
+    else 
+    { 
+        $contract['EndDate'] = Get-date($employee.attributes.termination_date.value) -format 'o'; 
     }
     [void]$person['Contracts'].Add($contract);
     Write-Output ($person | ConvertTo-Json -Depth 20);
