@@ -7,8 +7,7 @@ $AuthParams = @{
 };
 $header = [ordered]@{
     Accept = "application/json";
-    X-Personio-Partner-ID = "TOOLS4EVER"
-    X-Personio-App-ID = "YOURHELLOIDDOMAIN"
+    X-Personio-App-ID = $c.clientdomain
 }
 $response = Invoke-RestMethod -Method Post -Uri https://api.personio.de/v1/auth -Body $AuthParams -Headers $header
 $accessToken = $response.data.token
@@ -17,8 +16,7 @@ $authorization = [ordered]@{
     Authorization = "Bearer $accesstoken";
     'Content-Type' = "application/json";
     Accept = "application/json";
-    X-Personio-Partner-ID = "TOOLS4EVER"
-    X-Personio-App-ID = "YOURHELLOIDDOMAIN"
+    X-Personio-App-ID = $c.clientdomain
 }
 $response = Invoke-RestMethod -Method GET -Uri https://api.personio.de/v1/company/employees -Headers $authorization
 
