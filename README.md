@@ -12,6 +12,10 @@ HR System personio.de
 
 This connector retrieves HR data from the Personio API. You need to allow some field the API is allowed to access in Personio
 
+| :information_source: License Information |
+|:---------------------------|
+| To use the Personio API you now need to have the Enterprise license. If you don't you have to use a CSV. You can use the "Automation Plus" License to automate the export       |
+
 # Personio API Documentation
 https://developer.personio.de/reference#employees-1
 
