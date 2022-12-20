@@ -20,5 +20,16 @@
         "type": "password",
         "required": true
       }
+    },
+    {
+      "key": "clientdomain",
+      "type": "input",
+      "defaultValue": "",
+      "templateOptions": {
+        "label": "Client Domain",
+        "placeholder": "Enter your HelloID Subdomain Name",
+        "description": "Please ONLY use upper Case Letters - and only _ not -, ex. ENYOI or ENYOI_DE",
+        "required": true
+      }
     }
   ]
