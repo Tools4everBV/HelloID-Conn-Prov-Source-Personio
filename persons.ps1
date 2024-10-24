@@ -18,7 +18,7 @@ $authorization = [ordered]@{
     Accept = "application/json";
     'X-Personio-App-ID' = $c.clientdomain;
 }
-$pagesize = 20
+$pagesize = 50
 $response = Invoke-RestMethod -Method GET -Uri "https://api.personio.de/v1/company/employees?limit=$($pagesize)&offset=0" -Headers $authorization 
 $entries = $response.data
 
