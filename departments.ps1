@@ -18,10 +18,19 @@ $authorization = [ordered]@{
     Accept = "application/json";
     'X-Personio-App-ID' = $c.clientdomain;
 }
-$response = Invoke-RestMethod -Method GET -Uri https://api.personio.de/v1/company/employees -Headers $authorization
+$pagesize = 20
+$response = Invoke-RestMethod -Method GET -Uri "https://api.personio.de/v1/company/employees?limit=$($pagesize)&offset=0" -Headers $authorization 
+$entries = $response.data
+
+for ($i = 1; $i -lt $response.metadata.total_pages; $i++)
+{
+	$offset = $i * $pagesize
+	$response = Invoke-RestMethod -Method GET -Uri "https://api.personio.de/v1/company/employees?limit=$($pagesize)&offset=$($offset)" -Headers $authorization 
+	$entries += $response.data
+}
 
 $departments  = [System.Collections.ArrayList]@();
-foreach ($employee in $response.data)
+foreach ($employee in $entries)
 {
     $department  = @{};
     $department['Name'] = $employee.attributes.department.value.attributes.name
