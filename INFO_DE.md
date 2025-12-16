@@ -1,16 +1,21 @@
+## Personio-Schnittstelle für die automatisierte und regelbasierte Verwaltung von Benutzerkonten in Active Directory, Microsoft Entra ID und weiteren Systemen
+
+Heben Sie Ihre Benutzerverwaltung auf ein neues Level und befreien Sie Ihre IT von Routinearbeit mit Ihrem HR-System als Basis für ein automatisiertes, regelbasiertes und fehlerfreies User Life Cycle Management.
+
+# User Provisioning aus Personio 
 Durch die Integration werden alle Änderungen in Personio automatisch von unserem IAM-System erkannt und entsprechend der konfigurierten Prozesse (Eintritt, Änderung, Austritt) und der hinterlegten Business Rules in allen angebundenen Systemen synchronisiert.
-Die Daten in Personio bieten eine perfekte Grundlage für eine automatisierte, regelbasierte und fehlerfreie Benutzerverwaltung. Mittels eines Connectors zwischen rexx und Ihrem Netzwerk, bekommt jeder Mitarbeiter, anhand der Daten in Personio wie z. B. Name, Abteilung, Position, Manager, Eintritts-/Austrtittsdatum, usw., automatisch und regelbasiert einen angemessenen Zugang zu Systemen und Daten.
+Die Daten in rexx bieten eine perfekte Grundlage für eine automatisierte, regelbasierte und fehlerfreie Benutzerverwaltung. Mittels eines Connectors zwischen rexx und Ihrem Netzwerk, bekommt jeder Mitarbeiter, anhand der Daten in Personio wie z. B. Name, Abteilung, Position, Manager, Eintritts-/Austrtittsdatum, usw., automatisch und regelbasiert einen angemessenen Zugang zu Systemen und Daten.
 
 ## Ihre Vorteile eines automatisierten Personio-Konnektors
 
 Mit der Integration von Personio und HelloID optimieren Sie Ihre Prozesse und gewährleisten eine fehlerfreie, regelbasierte und sichere Verwaltung aller Konten und Berechtigungen.
 
-* **Durchgehende Prozesse zwischen HR und IT:** Eine sichere und effiziente Benutzerverwaltung startet in der Personalabteilung.
-* **Entlastung der IT:** Dank automatisierter und fehlerfreie Benutzerverwaltung. So schaffen Sie wieder Freiraum für Innovationen.
-* **Verbesserte IT-Sicherheit und Compliance:** Jeder User bekommt automatisiert und regelbasiert die richtigen Berechtigungen.
+* Durchgehende Prozesse zwischen HR und IT: Eine sichere und effiziente Benutzerverwaltung startet in der Personalabteilung.
+* Entlastung der IT: Dank automatisierter und fehlerfreie Benutzerverwaltung. So schaffen Sie wieder Freiraum für Innovationen.
+* Verbesserte IT-Sicherheit und Compliance: Jeder User bekommt automatisiert und regelbasiert die richtigen Berechtigungen.
 
 # User Provisioning aus Personio
-Durch die Integration werden alle Änderungen in Personio automatisch von unserem IAM-System erkannt und entsprechend der konfigurierten Prozesse (Eintritt, Änderung, Austritt) und der hinterlegten Business Rules in allen angebundenen Systemen synchronisiert.
+Durch die Integration werden alle Änderungen in rexx automatisch von unserem IAM-System erkannt und entsprechend der konfigurierten Prozesse (Eintritt, Änderung, Austritt) und der hinterlegten Business Rules in allen angebundenen Systemen synchronisiert.
 
 # Personio Schnittstelle als Quellsystem fuer User Provisioning
 
@@ -43,10 +48,10 @@ Beim Verlassen des Unternehmens sperrt HelloID alle Accounts automatisch, system
 
 ## Warum ist eine Personio-Anbindung mit HelloID nützlich?
 
-**Sicherheit und Auditing** 
-Akkumulation von Berechtigungen vermeiden z. B. Funktions-/Abteilungswechsel: Ein zentraler Vorteil von Identity-Management-Lösungen ist die Vermeidung der Rechteakkumulation (Principle of Least Privilege). Mitarbeiter sammeln im Laufe der Zeit immer mehr Berechtigungen an, besonders wenn diese manuell vergeben und nicht entzogen werden. Dies kann erhebliche Sicherheitsrisiken und Auditprobleme (z. B. DSGVO) verursachen. HelloID sichert durch regelbasierte Zugriffskontrolle (RBAC) stets ein korrektes und angemessenes Berechtigungsniveau.
+👉 **Sicherheit und Auditing** 
+Akkumulation von Berechtigungen vermeiden z. B. Funktions-/Abteilungswechsel:Ein zentraler Vorteil von Identity-Management-Lösungen ist die Vermeidung der Rechteakkumulation (Principle of Least Privilege). Mitarbeiter sammeln im Laufe der Zeit immer mehr Berechtigungen an, besonders wenn diese manuell vergeben und nicht entzogen werden. Dies kann erhebliche Sicherheitsrisiken und Auditprobleme (z. B. DSGVO) verursachen. HelloID sichert durch regelbasierte Zugriffskontrolle (RBAC) stets ein korrektes und angemessenes Berechtigungsniveau.
 
-Keine aktive Accounts für Ex-Mitarbeiter z. B. Austritt aus dem Unternehmen: Eine verspätete oder ausbleibende Information an die IT-Abteilung über den Austritt von (externen) Mitarbeitern führt häufig zu „verwaisten“ Benutzerkonten. Diese Konten sind nicht nur Sicherheitslücken, sondern verursachen auch Kosten durch ungenutzte Lizenzen. HelloID sorgt in Verbindung mit dem Personalsystem für eine automatische, systemübergreifende und rechtzeitige Sperrung von Accounts.
+Keine aktive Accounts für Ex-Mitarbeiter z. B. Austritt aus dem Unternehmen:Eine verspätete oder ausbleibende Information an die IT-Abteilung über den Austritt von (externen) Mitarbeitern führt häufig zu „verwaisten“ Benutzerkonten. Diese Konten sind nicht nur Sicherheitslücken, sondern verursachen auch Kosten durch ungenutzte Lizenzen. HelloID sorgt in Verbindung mit dem Personalsystem für eine automatische, systemübergreifende und rechtzeitige Sperrung von Accounts.
 
 Logging und Auditreporting: Die immer anspruchsvolleren Gesetze und Compliance-Vorschriften, wie DSGVO, BSI, ISO-27001 oder die Anforderungen Ihrer Cyberversicherung, erfordern eine transparente und nachvollziehbare Benutzer- und Berechtigungsverwaltung. Alle Änderungen in HelloID werden für Auditzwecke mit protokolliert.
 
@@ -82,7 +87,7 @@ Rechnen Sie mit 2-3 Tage für die Installation dieser Schnittstelle
 
 Bisher erfolgte die Anbindung an Personio über einen CSV-Export, der ausschließlich unidirektional funktionierte: Daten konnten aus rexx heraus exportiert und in HelloID verarbeitet werden, jedoch nicht zurückgeschrieben werden.
  
-Die Personio API ermöglicht einen zuverlässigeren und direkteren Export von Personaldaten aus Personio nach HelloID. Damit kann die Synchronisation künftig flexibler und stabiler gestalten.
+Die rexx API ermöglicht einen zuverlässigeren und direkteren Export von Personaldaten aus rexx nach HelloID. Damit kann die Synchronisation künftig flexibler und stabiler gestalten.
  
 Wichtig zu wissen:
 Die API bietet zwar eine Importfunktion, diese erlaubt jedoch nur den Import aller Personen gleichzeitig – ein gezieltes Update einzelner Datensätze ist aktuell nicht möglich. Damit bleibt die Integration weiterhin primär unidirektional, da HelloID-Daten wie E-Mail-Adressen oder UPNs derzeit nicht gezielt an rexx zurückgeschrieben werden können.
