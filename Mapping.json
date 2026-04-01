@@ -1,1 +1,199 @@
-{"personMappings":[{"name":"Contact.Business.Address.Locality","mode":"field","value":"dynamic_2540815","validation":{"required":false}},{"name":"Contact.Business.Address.PostalCode","mode":"field","value":"dynamic_2540814","validation":{"required":false}},{"name":"Contact.Business.Address.Street","mode":"field","value":"dynamic_2540813","validation":{"required":false}},{"name":"Contact.Business.Email","mode":"field","value":"email","validation":{"required":false}},{"name":"Contact.Personal.Email","mode":"field","value":"dynamic_2540812","validation":{"required":false}},{"name":"Details.BirthDate","mode":"field","value":"dynamic_2540783","validation":{"required":false}},{"name":"Details.Gender","mode":"field","value":"gender","validation":{"required":false}},{"name":"Details.MaritalStatus","mode":"field","value":"dynamic_2540811","validation":{"required":false}},{"name":"ExternalId","mode":"field","value":"ExternalId","validation":{"required":false}},{"name":"Location.Name","mode":"field","value":"office","validation":{"required":false}},{"name":"Name.FamilyName","mode":"field","value":"last_name","validation":{"required":true}},{"name":"Name.GivenName","mode":"field","value":"first_name","validation":{"required":false}},{"name":"Name.NickName","mode":"field","value":"first_name","validation":{"required":true}}],"contractMappings":[{"name":"CostCenter.Name","mode":"field","value":"Costcenter","validation":{"required":false}},{"name":"Department.DisplayName","mode":"field","value":"DepartmentName","validation":{"required":false}},{"name":"Department.ExternalId","mode":"field","value":"DepartmentNumber","validation":{"required":false}},{"name":"EndDate","mode":"field","value":"EndDate","validation":{"required":false}},{"name":"ExternalId","mode":"field","value":"SequenceNumber","validation":{"required":false}},{"name":"Location.Name","mode":"field","value":"office","validation":{"required":false}},{"name":"Manager.ExternalId","mode":"field","value":"ManagerExternalId","validation":{"required":false}},{"name":"StartDate","mode":"field","value":"StartDate","validation":{"required":false}},{"name":"Team.Name","mode":"field","value":"team","validation":{"required":false}},{"name":"Title.ExternalId","mode":"field","value":"TitleCode","validation":{"required":false}},{"name":"Title.Name","mode":"field","value":"JobTitle","validation":{"required":false}},{"name":"Type.Description","mode":"field","value":"type","validation":{"required":false}}]}
+{
+	"personMappings": [
+		{
+			"name": "Contact.Business.Email",
+			"mode": "field",
+			"value": "email",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Details.Gender",
+			"mode": "complex",
+			"value": "function getGender(){\r\n    switch(source.gender){\r\n        case 'MALE': return 'M';\r\n        case 'FEMALE': return 'F';\r\n        default: return 'X';\r\n    }\r\n}\r\n\r\ngetGender();",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "ExternalId",
+			"mode": "field",
+			"value": "ExternalId",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Name.Convention",
+			"mode": "fixed",
+			"value": "B",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Name.FamilyName",
+			"mode": "field",
+			"value": "last_name",
+			"validation": {
+				"required": true
+			}
+		},
+		{
+			"name": "Name.FamilyNamePrefix",
+			"mode": "field",
+			"value": "customattribute_dynamic_69c288a4f26953_23905565",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Name.GivenName",
+			"mode": "field",
+			"value": "first_name",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Name.Initials",
+			"mode": "field",
+			"value": "customattribute_dynamic_69a6b8fa2323d5_65049900",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Name.NickName",
+			"mode": "field",
+			"value": "first_name",
+			"validation": {
+				"required": true
+			}
+		}
+	],
+	"contractMappings": [
+		{
+			"name": "Custom.Domain",
+			"mode": "complex",
+			"value": "function getDomain() {\r\n    let id = sourceContract.legalEntity_id;\r\n    let domein = \"\";\r\n\r\n    switch (id) {\r\n        case \"748978\":\r\n            domein = \"quooker.pl\"; // QUOOKER POLSKA SP. Z O.O.\r\n            break;\r\n        case \"748977\":\r\n            domein = \"quooker.fr\"; // QUOOKER FRANCE\r\n            break;\r\n        case \"748981\":\r\n            domein = \"quooker.pt\"; // Quooker Unipessoal Lda\r\n            break;\r\n        case \"750236\":\r\n            domein = \"quooker.es\"; // QUOOKER ESPAÑA S.L.\r\n            break;\r\n        case \"750237\":\r\n            domein = \"quooker.it\"; // quooker Italia S.R.L.\r\n            break;\r\n        case \"748973\":\r\n            domein = \"quooker.ie\"; // Quooker Ireland Ltd\r\n            break;\r\n        case \"750399\":\r\n            domein = \"quooker.nl\"; // Quooker Nieuw Reijerwaard B.V.\r\n            break;\r\n        case \"748976\":\r\n            domein = \"quooker.hk\"; // Quooker Hong Kong Ltd\r\n            break;\r\n        case \"748974\":\r\n            domein = \"quooker.at\"; // Quooker Österreich GmbH\r\n            break;\r\n        case \"750238\":\r\n            domein = \"quooker.ae\"; // Quooker Emirates for Boiling water tap LLC\r\n            break;\r\n        case \"748975\":\r\n            domein = \"quooker.ch\"; // Quooker Schweiz Ag\r\n            break;\r\n        case \"751908\":\r\n            domein = \"quooker.de\"; // Quooker Deutschland Gmbh\r\n            break;\r\n        case \"737061\":\r\n            domein = \"quooker.be\"; // Quooker Belgium\r\n            break;\r\n        case \"748972\":\r\n            domein = \"quooker.co.uk\"; // QUOOKER UK LTD\r\n            break;\r\n        case \"750374\":\r\n            domein = \"quooker.nl\"; // Quooker B.V.\r\n            break;\r\n        case \"750375\":\r\n            domein = \"quooker.nl\"; // Quooker International B.V.\r\n            break;\r\n        case \"737066\":\r\n            domein = \"quooker.nl\"; // Quooker Nederland B.V.\r\n            break;\r\n        default:\r\n            domein = \"onbekend\";\r\n    }\r\n\r\n    return domein;\r\n}\r\n\r\ngetDomain();",
+			"validation": {
+				"required": false
+			},
+			"convertToString": true
+		},
+		{
+			"name": "Department.DisplayName",
+			"mode": "field",
+			"value": "orgUnit_name",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Department.ExternalId",
+			"mode": "field",
+			"value": "orgUnit_id",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Details.Fte",
+			"mode": "complex",
+			"value": "function getFTE(){\r\n    if(typeof sourceContract.weekly_working_hours !== 'undefined' && \r\n            typeof sourceContract.full_time_weekly_working_hours !== 'undefined' &&\r\n            sourceContract.weekly_working_hours && \r\n            sourceContract.full_time_weekly_working_hours){\r\n        \r\n        return (sourceContract.weekly_working_hours / sourceContract.full_time_weekly_working_hours);\r\n    }\r\n    else{\r\n        return 0;\r\n    }\r\n}\r\n\r\ngetFTE();",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Details.HoursPerWeek",
+			"mode": "field",
+			"value": "weekly_working_hours",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "EndDate",
+			"mode": "field",
+			"value": "employment_end_date",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "ExternalId",
+			"mode": "field",
+			"value": "id",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Location.ExternalId",
+			"mode": "field",
+			"value": "workPlace_id",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Location.Name",
+			"mode": "field",
+			"value": "workPlace_name",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Manager.ExternalId",
+			"mode": "complex",
+			"value": "function getManager(){\r\n    if(typeof sourceContract.supervisor !== 'undefined' && sourceContract.supervisor){\r\n        return sourceContract.supervisor.id;\r\n    }\r\n    else {\r\n        return null;\r\n    }\r\n}\r\n\r\ngetManager();",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Organization.ExternalId",
+			"mode": "field",
+			"value": "legalEntity_id",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Organization.Name",
+			"mode": "field",
+			"value": "legalEntity_name",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "StartDate",
+			"mode": "field",
+			"value": "employment_start_date",
+			"validation": {
+				"required": true
+			}
+		},
+		{
+			"name": "Title.Name",
+			"mode": "complex",
+			"value": "function getTitle(){\r\n    if(typeof sourceContract.position !== 'undefined' && sourceContract.position){\r\n        return sourceContract.position.title;\r\n    }\r\n    else {\r\n        return null;\r\n    }\r\n}\r\n\r\ngetTitle();",
+			"validation": {
+				"required": false
+			}
+		},
+		{
+			"name": "Type.Description",
+			"mode": "field",
+			"value": "type",
+			"validation": {
+				"required": false
+			}
+		}
+	]
+}

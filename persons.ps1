@@ -1,111 +1,186 @@
-$c = $configuration | ConvertFrom-Json;
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+$c = $configuration | ConvertFrom-Json
+
+$ClientId = $c.clientid
+$ClientSecret = $c.clientsecret
+$BaseUrl = "https://api.personio.de/v2"
+
+#region functions
+function Invoke-PersonioRestMethod {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $Uri,
+
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary]
+        $Headers
+    )
+
+    process {
+        try {
+            # Write-Information "Invoking command '$($MyInvocation.MyCommand)' to Uri '$Uri'"
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::tls12
+
+            [System.Collections.ArrayList]$ReturnValue = @()
+
+            $tempUri = $Uri
+            do {
+                $splatRestMethodParameters = @{
+                    Uri         = "$($tempUri)"
+                    Method      = 'GET'
+                    ContentType = 'application/json'
+                    Headers     = $Headers
+                    Verbose     = $false
+                    ErrorAction = 'Stop'
+                }
+            
+                $response = Invoke-RestMethod @splatRestMethodParameters
+                
+                if ($response.'_data' -is [array]) {
+                    [void]$ReturnValue.AddRange($response.'_data')
+                }
+                else {
+                    [void]$ReturnValue.Add($response.'_data')
+                }
+                
+                $tempUri = $($response.'_meta'.links.next.href)
+                
+            } while ($tempUri)
+
+            #Write-Verbose "Retrieved $($ReturnValue.Count) objects for $Uri"
+
+            return $ReturnValue
+
+        }
+        catch {
+            $PSCmdlet.ThrowTerminatingError($_)
+        }
+    }
+}
+#endregion functions
+
+try{
+    $Body = @{
+        client_id = $ClientId
+        client_secret = $ClientSecret
+        grant_type = 'client_credentials';
+    };
+
+    $header = [ordered]@{
+        "Accept" = "application/json";
+        "Content-Type" = 'application/x-www-form-urlencoded';
+        'X-Personio-App-ID' = $c.PersonioAppId;
+        'X-Personio-Partner-ID' = $c.PersonioPartnerId;
+    }
+
+    $response = Invoke-RestMethod -Method Post -Uri "https://api.personio.de/v2/auth/token" -Body $Body -Headers $header
+    $accessToken = $response.access_token
+
+    $authorizationHeaders = [ordered]@{
+        Authorization = "Bearer $accesstoken";
+        'Content-Type' = "application/json";
+        Accept = "application/json";
+        'X-Personio-App-ID' = $c.PersonioAppId;
+        'X-Personio-Partner-ID' = $c.PersonioPartnerId;
+    }
+
+    $authorizationHeadersBeta = [ordered]@{
+        Authorization = "Bearer $accesstoken";
+        'Content-Type' = "application/json";
+        Accept = "application/json";
+        Beta = "true"
+        'X-Personio-App-ID' = $c.PersonioAppId;
+        'X-Personio-Partner-ID' = $c.PersonioPartnerId;
+    }
     
-$AuthParams = @{
-    client_id=$c.clientid;
-    client_secret=$c.clientsecret;
-};
-$header = [ordered]@{
-    Accept = "application/json";
-    'X-Personio-App-ID' = $c.clientdomain;
-}
-$response = Invoke-RestMethod -Method Post -Uri https://api.personio.de/v1/auth -Body $AuthParams -Headers $header
-$accessToken = $response.data.token
+    $persons = Invoke-PersonioRestMethod -Uri "$BaseUrl/persons" -Headers $authorizationHeaders 
 
-$authorization = [ordered]@{
-    Authorization = "Bearer $accesstoken";
-    'Content-Type' = "application/json";
-    Accept = "application/json";
-    'X-Personio-App-ID' = $c.clientdomain;
-}
-$pagesize = 50
-$response = Invoke-RestMethod -Method GET -Uri "https://api.personio.de/v1/company/employees?limit=$($pagesize)&offset=0" -Headers $authorization 
-$entries = $response.data
+    $legalEntities = Invoke-PersonioRestMethod -Uri "$BaseUrl/legal-entities" -Headers $authorizationHeaders
+    $legalEntitiesGrouped = $legalEntities | Group-Object id -CaseSensitive -AsHashTable -AsString
 
-for ($i = 1; $i -lt $response.metadata.total_pages; $i++)
-{
-	$offset = $i * $pagesize
-	$response = Invoke-RestMethod -Method GET -Uri "https://api.personio.de/v1/company/employees?limit=$($pagesize)&offset=$($offset)" -Headers $authorization 
-	$entries += $response.data
-}
+    $orgUnits = Invoke-PersonioRestMethod -Uri "$BaseUrl/org-units?type=department" -Headers $authorizationHeadersBeta
+    $orgUnitsGrouped = $orgUnits | Group-Object id -CaseSensitive -AsHashTable -AsString
 
-foreach ($employee in $entries)
-{
-    $person  = @{};
-    $person['ExternalId'] = $employee.attributes.id.value
-    $person['DisplayName'] = $employee.attributes.last_name.value + ", " + $employee.attributes.first_name.value
-    if ($employee.attributes.status.value -eq "Inactive" -and [string]::IsNullOrEmpty($person['ExternalId']) -eq $true)
+    $workPlaces = Invoke-PersonioRestMethod -Uri "$BaseUrl/workplaces" -Headers $authorizationHeadersBeta
+    $workPlacesGrouped = $workPlaces | Group-Object id -CaseSensitive -AsHashTable -AsString
+
+    foreach ($person in $persons)
     {
-        Write-Verbose -Verbose "Skipped inactive: " + $person['ExternalId']
-        continue;
-    }
-    if ([string]::IsNullOrEmpty($person['ExternalId']) -eq $true)
-    {
-        Write-Verbose -Verbose "Skipped else: " + $person['ExternalId']
-        continue;
-    }
-    foreach($prop in $employee.attributes.PSObject.properties)
-    { 
-        switch ($prop.Name)
-        {
-            "office" { $person[$prop.Name] = "$(($prop.Value).value.attributes.name)"; }
-            "team" { }
-            "department" { }
-            "supervisor" { }
-            "hire_date" { }
-            "termination_date" { }
-            "last_working_day" { }
-            "contract_end_date" { }
-            "cost_centers" { }
-		    Default { $person[$prop.Name] = "$(($prop.Value).value)"; }
-	    }
-    }
-    $person['Contracts'] = [System.Collections.ArrayList]@();
-    $contract = @{};
-    $contract['SequenceNumber'] = "1";
-    foreach($prop in $employee.attributes.PSObject.properties)
-    {
-       switch ($prop.Name)
-       {
-            "department" { 
-                $contract['DepartmentName'] = "$(($prop.Value).value.attributes.name)"; 
-                $contract['DepartmentNumber'] = "$(($prop.Value).value.attributes.id)";}
-            "team" { $contract[$prop.Name] = "$(($prop.Value).value.attributes.name)"; }
-            "office" { $contract[$prop.Name] = "$(($prop.Value).value.attributes.name)"; }
-            "position" { $contract['JobTitle'] = "$(($prop.Value).value)"; }
-            "supervisor" { $contract['ManagerExternalId'] = "$(($prop.Value).value.attributes.id.value)"; }
-            "employment_type" { $contract['type'] = "$(($prop.Value).value)"; }
-            "cost_centers" { $contract['Costcenter'] = "$(($prop.Value).value.attributes.name)"; }
-            "hire_date" { if ([string]::IsNullOrEmpty($(($prop.Value).value))) { $contract['StartDate'] = $null } else { $contract['StartDate'] = Get-date("$(($prop.Value).value)") -format 'o'; } }
-            "termination_date" { }
-            "last_working_day" { }
-            "contract_end_date" { }
-       }
-    }
-    if ([string]::IsNullOrEmpty($employee.attributes.termination_date.value)) 
-    { 
-        if ([string]::IsNullOrEmpty($employee.attributes.last_working_day.value)) 
-        { 
-            if ([string]::IsNullOrEmpty($employee.attributes.contract_end_date.value)) 
-            { 
-                $contract['EndDate'] = $null 
-            }
-            else 
-            {
-                $contract['EndDate'] = Get-date($employee.attributes.contract_end_date.value) -format 'o'; 
+        $personEmployments = Invoke-PersonioRestMethod -Uri "$BaseUrl/persons/$($person.id)/employments" -Headers $authorizationHeaders
+
+        if ($null -ne $personEmployments) {
+            foreach ($employment in $personEmployments) {
+                $legalEntity = $legalEntitiesGrouped["$($employment.legal_entity.id)"]
+                if ($null -ne $legalEntity) {
+                    # In case multiple are found with the same ID, we always select the first one in the array
+                    $legalEntity = $legalEntity | Select-Object -First 1
+
+                    if (![string]::IsNullOrEmpty($legalEntity)) {
+                        foreach ($property in $legalEntity.PsObject.Properties) {
+                            # Add a property for each field in object
+                            $employment | Add-Member -MemberType NoteProperty -Name ("legalEntity_" + $property.Name) -Value $property.Value -Force
+                        }
+                    }
+                }
+
+                $orgUnitDepartmentId = $($employment.org_units | Where-Object {$_.type -eq 'department'}).id
+                $orgUnit = $orgUnitsGrouped["$orgUnitDepartmentId"]
+                if ($null -ne $orgUnit) {
+                    # In case multiple are found with the same ID, we always select the first one in the array
+                    $orgUnit = $orgUnit | Select-Object -First 1
+
+                    if (![string]::IsNullOrEmpty($orgUnit)) {
+                        foreach ($property in $orgUnit.PsObject.Properties) {
+                            # Add a property for each field in object
+                            $employment | Add-Member -MemberType NoteProperty -Name ("orgUnit_" + $property.Name) -Value $property.Value -Force
+                        }
+                    }
+                }
+
+                $workPlace = $workPlacesGrouped["$($employment.office.id)"]
+                if ($null -ne $workPlace) {
+                    # In case multiple are found with the same ID, we always select the first one in the array
+                    $workPlace = $workPlace | Select-Object -First 1
+
+                    if (![string]::IsNullOrEmpty($workPlace)) {
+                        foreach ($property in $workPlace.PsObject.Properties) {
+                            # Add a property for each field in object
+                            $employment | Add-Member -MemberType NoteProperty -Name ("workPlace_" + $property.Name) -Value $property.Value -Force
+                        }
+                    }
+                }
             }
         }
-        else 
-        {
-            $contract['EndDate'] = Get-date($employee.attributes.last_working_day.value) -format 'o'; 
-        }
-    } 
-    else 
-    { 
-        $contract['EndDate'] = Get-date($employee.attributes.termination_date.value) -format 'o'; 
-    }
-    [void]$person['Contracts'].Add($contract);
-    Write-Output ($person | ConvertTo-Json -Depth 20);
-}
 
-Write-Verbose -Verbose "Person import completed";
+        # Add custom attributes to person object
+        if ($null -ne $person.custom_attributes -and ($person.custom_attributes).Count -gt 0) {
+            foreach ($custom_attribute in $person.custom_attributes) {
+                #Write-Warning "Adding $($custom_attribute.id) for $($person.preferred_name)"
+                $person | Add-Member -MemberType NoteProperty -Name ("customattribute_" + ($custom_attribute.id.Replace('.', '_'))) -Value $custom_attribute.value -Force
+            }
+        }
+
+        # Remove unnecessary fields from object (to avoid unnecessary large objects)
+        $person.PSObject.Properties.Remove('custom_attributes')
+
+        $person | Add-Member -MemberType NoteProperty -Name 'DisplayName' -Value "$($person.preferred_name)".trim(" ")
+        $person | Add-Member -MemberType NoteProperty -Name 'ExternalId'  -Value $person.id
+        $person | Add-Member -MemberType NoteProperty -Name 'Contracts'   -Value @($personEmployments)
+        
+        #if($person.ExternalId -eq '34243358'){
+        Write-Output ($person | ConvertTo-Json -Depth 20);
+        #}
+    }
+
+    Write-Verbose -Verbose "Person import completed";
+}
+catch {
+    $ex = $PSItem
+    Write-verbose -Verbose "Could not retrieve Personio employees. Error: $($ex.Exception.Message)"
+    Write-verbose -Verbose "Could not retrieve Personio employees. ErrorDetails: $($ex.ErrorDetails)"
+    throw ($ex)
+}
