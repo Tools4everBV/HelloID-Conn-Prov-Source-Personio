@@ -1,52 +1,115 @@
-$c = $configuration | ConvertFrom-Json;
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-   
-$AuthParams = @{
-    client_id=$c.clientid;
-    client_secret=$c.clientsecret;
-};
-$header = [ordered]@{
-    Accept = "application/json";
-    'X-Personio-App-ID' = $c.PersonioAppId;
-    'X-Personio-Partner-ID' = $c.PersonioPartnerId;
-}
-$response = Invoke-RestMethod -Method Post -Uri https://api.personio.de/v1/auth -Body $AuthParams -Headers $header
-$accessToken = $response.data.token
 
-$authorization = [ordered]@{
-    Authorization = "Bearer $accesstoken";
-    'Content-Type' = "application/json";
-    Accept = "application/json";
-    'X-Personio-App-ID' = $c.PersonioAppId;
-    'X-Personio-Partner-ID' = $c.PersonioPartnerId;
-}
-$pagesize = 50
-$response = Invoke-RestMethod -Method GET -Uri "https://api.personio.de/v1/company/employees?limit=$($pagesize)&offset=0" -Headers $authorization 
-$entries = $response.data
+$c = $configuration | ConvertFrom-Json
 
-for ($i = 1; $i -lt $response.metadata.total_pages; $i++)
-{
-	$offset = $i * $pagesize
-	$response = Invoke-RestMethod -Method GET -Uri "https://api.personio.de/v1/company/employees?limit=$($pagesize)&offset=$($offset)" -Headers $authorization 
-	$entries += $response.data
-}
+$ClientId = $c.clientid
+$ClientSecret = $c.clientsecret
+$BaseUrl = "https://api.personio.de/v2"
 
-$departments  = [System.Collections.ArrayList]@();
-foreach ($employee in $entries)
-{
-    $department  = @{};
-    $department['Name'] = $employee.attributes.department.value.attributes.name
-    $department['DisplayName'] = $employee.attributes.department.value.attributes.name
-    $department['ExternalId'] = $employee.attributes.department.value.attributes.id
-    if ([string]::IsNullOrEmpty($department['ExternalId']) -eq $true)
-    {
-        $department['ExternalId'] = $department['Name']
+#region functions
+function Invoke-PersonioRestMethod {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $Uri,
+
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary]
+        $Headers
+    )
+
+    process {
+        try {
+            # Write-Information "Invoking command '$($MyInvocation.MyCommand)' to Uri '$Uri'"
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::tls12
+
+            [System.Collections.ArrayList]$ReturnValue = @()
+
+            $tempUri = $Uri
+            do {
+                $splatRestMethodParameters = @{
+                    Uri         = "$($tempUri)"
+                    Method      = 'GET'
+                    ContentType = 'application/json'
+                    Headers     = $Headers
+                    Verbose     = $false
+                    ErrorAction = 'Stop'
+                }
+            
+                $response = Invoke-RestMethod @splatRestMethodParameters
+
+                if($response.'_data' -ne $null){
+                
+                    if ($response.'_data' -is [array]) {
+                        [void]$ReturnValue.AddRange($response.'_data')
+                    }
+                    else {
+                        [void]$ReturnValue.Add($response.'_data')
+                    }
+                }
+                else {
+                    [void]$ReturnValue.Add($response)
+                }
+                
+                $tempUri = $($response.'_meta'.links.next.href)
+                
+            } while ($tempUri)
+
+            return $ReturnValue
+
+        }
+        catch {
+            $PSCmdlet.ThrowTerminatingError($_)
+        }
     }
-    if ($departments.Contains($department['ExternalId']) -eq $false)
+}
+#endregion functions
+
+try{
+    $Body = @{
+        client_id = $ClientId
+        client_secret = $ClientSecret
+        grant_type = 'client_credentials';
+    };
+
+    $header = [ordered]@{
+        "Accept" = "application/json";
+        "Content-Type" = 'application/x-www-form-urlencoded';
+        'X-Personio-App-ID' = $c.PersonioAppId;
+        'X-Personio-Partner-ID' = $c.PersonioPartnerId;
+    }
+
+    $response = Invoke-RestMethod -Method Post -Uri "https://api.personio.de/v2/auth/token" -Body $Body -Headers $header
+    $accessToken = $response.access_token
+
+    $authorizationHeaders = [ordered]@{
+        Authorization = "Bearer $accesstoken";
+        'Content-Type' = "application/json";
+        Accept = "application/json";
+        'X-Personio-App-ID' = $c.PersonioAppId;
+        'X-Personio-Partner-ID' = $c.PersonioPartnerId;
+    }
+
+    $orgUnits = Invoke-PersonioRestMethod -Uri "$BaseUrl/org-units?type=department" -Headers $authorizationHeaders
+
+    foreach ($orgUnit in $orgUnits)
     {
+        $department = @{
+            DisplayName = $orgUnit.name
+            ExternalId = $orgUnit.id
+            #ParentExternalId = $orgUnit.parent_id
+        }
+        
         Write-Output ($department | ConvertTo-Json -Depth 20);
-        $departments += $department['ExternalId'];
     }
-}
 
-Write-Verbose -Verbose "Department import completed";
+    Write-Verbose -Verbose "Department import completed";
+}
+catch {
+    $ex = $PSItem
+    Write-verbose -Verbose "Could not retrieve Personio employees. Error: $($ex.Exception.Message)"
+    Write-verbose -Verbose "Could not retrieve Personio employees. ErrorDetails: $($ex.ErrorDetails)"
+    throw ($ex)
+}
