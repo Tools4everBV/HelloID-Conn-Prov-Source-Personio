@@ -75,13 +75,20 @@
 	],
 	"contractMappings": [
 		{
-			"name": "Custom.Domain",
-			"mode": "complex",
-			"value": "function getDomain() {\r\n    let id = sourceContract.legalEntity_id;\r\n    let domein = \"\";\r\n\r\n    switch (id) {\r\n        case \"748978\":\r\n            domein = \"quooker.pl\"; // QUOOKER POLSKA SP. Z O.O.\r\n            break;\r\n        case \"748977\":\r\n            domein = \"quooker.fr\"; // QUOOKER FRANCE\r\n            break;\r\n        case \"748981\":\r\n            domein = \"quooker.pt\"; // Quooker Unipessoal Lda\r\n            break;\r\n        case \"750236\":\r\n            domein = \"quooker.es\"; // QUOOKER ESPAÑA S.L.\r\n            break;\r\n        case \"750237\":\r\n            domein = \"quooker.it\"; // quooker Italia S.R.L.\r\n            break;\r\n        case \"748973\":\r\n            domein = \"quooker.ie\"; // Quooker Ireland Ltd\r\n            break;\r\n        case \"750399\":\r\n            domein = \"quooker.nl\"; // Quooker Nieuw Reijerwaard B.V.\r\n            break;\r\n        case \"748976\":\r\n            domein = \"quooker.hk\"; // Quooker Hong Kong Ltd\r\n            break;\r\n        case \"748974\":\r\n            domein = \"quooker.at\"; // Quooker Österreich GmbH\r\n            break;\r\n        case \"750238\":\r\n            domein = \"quooker.ae\"; // Quooker Emirates for Boiling water tap LLC\r\n            break;\r\n        case \"748975\":\r\n            domein = \"quooker.ch\"; // Quooker Schweiz Ag\r\n            break;\r\n        case \"751908\":\r\n            domein = \"quooker.de\"; // Quooker Deutschland Gmbh\r\n            break;\r\n        case \"737061\":\r\n            domein = \"quooker.be\"; // Quooker Belgium\r\n            break;\r\n        case \"748972\":\r\n            domein = \"quooker.co.uk\"; // QUOOKER UK LTD\r\n            break;\r\n        case \"750374\":\r\n            domein = \"quooker.nl\"; // Quooker B.V.\r\n            break;\r\n        case \"750375\":\r\n            domein = \"quooker.nl\"; // Quooker International B.V.\r\n            break;\r\n        case \"737066\":\r\n            domein = \"quooker.nl\"; // Quooker Nederland B.V.\r\n            break;\r\n        default:\r\n            domein = \"onbekend\";\r\n    }\r\n\r\n    return domein;\r\n}\r\n\r\ngetDomain();",
+			"name": "CostCenter.ExternalId",
+			"mode": "field",
+			"value": "costcenter_id",
 			"validation": {
 				"required": false
-			},
-			"convertToString": true
+			}
+		},
+		{
+			"name": "CostCenter.Name",
+			"mode": "field",
+			"value": "costcenter_name",
+			"validation": {
+				"required": false
+			}
 		},
 		{
 			"name": "Department.DisplayName",
@@ -116,6 +123,14 @@
 			}
 		},
 		{
+			"name": "Details.Percentage",
+			"mode": "field",
+			"value": "costcenter_weight",
+			"validation": {
+				"required": false
+			}
+		},
+		{
 			"name": "EndDate",
 			"mode": "field",
 			"value": "employment_end_date",
@@ -126,7 +141,7 @@
 		{
 			"name": "ExternalId",
 			"mode": "field",
-			"value": "id",
+			"value": "ExternalId",
 			"validation": {
 				"required": false
 			}
@@ -134,7 +149,7 @@
 		{
 			"name": "Location.ExternalId",
 			"mode": "field",
-			"value": "workPlace_id",
+			"value": "workplace_id",
 			"validation": {
 				"required": false
 			}
@@ -142,7 +157,7 @@
 		{
 			"name": "Location.Name",
 			"mode": "field",
-			"value": "workPlace_name",
+			"value": "workplace_name",
 			"validation": {
 				"required": false
 			}
@@ -180,9 +195,17 @@
 			}
 		},
 		{
+			"name": "Title.ExternalId",
+			"mode": "field",
+			"value": "job_id",
+			"validation": {
+				"required": false
+			}
+		},
+		{
 			"name": "Title.Name",
-			"mode": "complex",
-			"value": "function getTitle(){\r\n    if(typeof sourceContract.position !== 'undefined' && sourceContract.position){\r\n        return sourceContract.position.title;\r\n    }\r\n    else {\r\n        return null;\r\n    }\r\n}\r\n\r\ngetTitle();",
+			"mode": "field",
+			"value": "job_name",
 			"validation": {
 				"required": false
 			}
