@@ -39,12 +39,18 @@ function Invoke-PersonioRestMethod {
                 }
             
                 $response = Invoke-RestMethod @splatRestMethodParameters
+
+                if($response.'_data' -ne $null){
                 
-                if ($response.'_data' -is [array]) {
-                    [void]$ReturnValue.AddRange($response.'_data')
+                    if ($response.'_data' -is [array]) {
+                        [void]$ReturnValue.AddRange($response.'_data')
+                    }
+                    else {
+                        [void]$ReturnValue.Add($response.'_data')
+                    }
                 }
                 else {
-                    [void]$ReturnValue.Add($response.'_data')
+                    [void]$ReturnValue.Add($response)
                 }
                 
                 $tempUri = $($response.'_meta'.links.next.href)
@@ -87,29 +93,28 @@ try{
         'X-Personio-App-ID' = $c.PersonioAppId;
         'X-Personio-Partner-ID' = $c.PersonioPartnerId;
     }
-
-    $authorizationHeadersBeta = [ordered]@{
-        Authorization = "Bearer $accesstoken";
-        'Content-Type' = "application/json";
-        Accept = "application/json";
-        Beta = "true"
-        'X-Personio-App-ID' = $c.PersonioAppId;
-        'X-Personio-Partner-ID' = $c.PersonioPartnerId;
-    }
     
     $persons = Invoke-PersonioRestMethod -Uri "$BaseUrl/persons" -Headers $authorizationHeaders 
 
     $legalEntities = Invoke-PersonioRestMethod -Uri "$BaseUrl/legal-entities" -Headers $authorizationHeaders
     $legalEntitiesGrouped = $legalEntities | Group-Object id -CaseSensitive -AsHashTable -AsString
 
-    $orgUnits = Invoke-PersonioRestMethod -Uri "$BaseUrl/org-units?type=department" -Headers $authorizationHeadersBeta
+    $orgUnits = Invoke-PersonioRestMethod -Uri "$BaseUrl/org-units?type=department" -Headers $authorizationHeaders
     $orgUnitsGrouped = $orgUnits | Group-Object id -CaseSensitive -AsHashTable -AsString
 
-    $workPlaces = Invoke-PersonioRestMethod -Uri "$BaseUrl/workplaces" -Headers $authorizationHeadersBeta
+    $workPlaces = Invoke-PersonioRestMethod -Uri "$BaseUrl/workplaces" -Headers $authorizationHeaders
     $workPlacesGrouped = $workPlaces | Group-Object id -CaseSensitive -AsHashTable -AsString
+
+    $costCenters = Invoke-PersonioRestMethod -Uri "$BaseUrl/cost-centers" -Headers $authorizationHeaders
+    $costCentersGrouped = $costCenters | Group-Object id -CaseSensitive -AsHashTable -AsString
+
+    $jobs = Invoke-PersonioRestMethod -Uri "$BaseUrl/jobs" -Headers $authorizationHeaders
+    $jobsGrouped = $jobs | Group-Object id -CaseSensitive -AsHashTable -AsString
 
     foreach ($person in $persons)
     {
+        [System.Collections.ArrayList]$expandedEmployments = @()
+
         $personEmployments = Invoke-PersonioRestMethod -Uri "$BaseUrl/persons/$($person.id)/employments" -Headers $authorizationHeaders
 
         if ($null -ne $personEmployments) {
@@ -127,6 +132,32 @@ try{
                     }
                 }
 
+                $workPlace = $workPlacesGrouped["$($employment.office.id)"]
+                if ($null -ne $workPlace) {
+                    # In case multiple are found with the same ID, we always select the first one in the array
+                    $workPlace = $workPlace | Select-Object -First 1
+
+                    if (![string]::IsNullOrEmpty($workPlace)) {
+                        foreach ($property in $workPlace.PsObject.Properties) {
+                            # Add a property for each field in object
+                            $employment | Add-Member -MemberType NoteProperty -Name ("workplace_" + $property.Name) -Value $property.Value -Force
+                        }
+                    }
+                }
+
+                $job = $jobsGrouped["$($employment.job.id)"]
+                if ($null -ne $job) {
+                    # In case multiple are found with the same ID, we always select the first one in the array
+                    $job = $job | Select-Object -First 1
+
+                    if (![string]::IsNullOrEmpty($job)) {
+                        foreach ($property in $job.PsObject.Properties) {
+                            # Add a property for each field in object
+                            $employment | Add-Member -MemberType NoteProperty -Name ("job_" + $property.Name) -Value $property.Value -Force
+                        }
+                    }
+                }
+
                 $orgUnitDepartmentId = $($employment.org_units | Where-Object {$_.type -eq 'department'}).id
                 $orgUnit = $orgUnitsGrouped["$orgUnitDepartmentId"]
                 if ($null -ne $orgUnit) {
@@ -139,19 +170,44 @@ try{
                             $employment | Add-Member -MemberType NoteProperty -Name ("orgUnit_" + $property.Name) -Value $property.Value -Force
                         }
                     }
-                }
 
-                $workPlace = $workPlacesGrouped["$($employment.office.id)"]
-                if ($null -ne $workPlace) {
-                    # In case multiple are found with the same ID, we always select the first one in the array
-                    $workPlace = $workPlace | Select-Object -First 1
-
-                    if (![string]::IsNullOrEmpty($workPlace)) {
-                        foreach ($property in $workPlace.PsObject.Properties) {
-                            # Add a property for each field in object
-                            $employment | Add-Member -MemberType NoteProperty -Name ("workPlace_" + $property.Name) -Value $property.Value -Force
+                    if(-not([string]::IsNullOrEmpty($orgUnit.parent_id))){
+                        $parentOrgUnit = $orgUnitsGrouped[$orgUnit.parent_id]
+                        if (![string]::IsNullOrEmpty($parentOrgUnit)) {
+                            foreach ($property in $parentOrgUnit.PsObject.Properties) {
+                                # Add a property for each field in object
+                                $employment | Add-Member -MemberType NoteProperty -Name ("parentOrgUnit_" + $property.Name) -Value $property.Value -Force
+                            }
                         }
                     }
+                }
+
+                if ($null -ne $employment.cost_centers -and $employment.cost_centers.Count -gt 0) {
+                    foreach ($employmentCostCenter in $employment.cost_centers) {
+
+                        # Maak een kopie van het employment
+                        $expandedEmployment = $employment | Select-Object *
+
+                        $costCenter = $costCentersGrouped["$($employmentCostCenter.id)"]
+
+                        if ($null -ne $costCenter) {
+                            $costCenter = $costCenter | Select-Object -First 1
+
+                            foreach ($property in $costCenter.PsObject.Properties) {
+                                $expandedEmployment | Add-Member -MemberType NoteProperty -Name ("costcenter_" + $property.Name) -Value $property.Value -Force
+                            }
+
+                            $expandedEmployment | Add-Member -MemberType NoteProperty -Name ("costcenter_weight") -Value $employmentCostCenter.weight -Force
+                        }
+
+                        $expandedEmployment | Add-Member -MemberType NoteProperty -Name ("ExternalId") -Value ($employment.id + '_' + $employmentCostCenter.id) -Force
+                        [void]$expandedEmployments.Add($expandedEmployment)
+                    }
+                }
+                else {
+                    # Geen kostenplaats: employment toch behouden
+                    $employment | Add-Member -MemberType NoteProperty -Name ("ExternalId") -Value ($employment.id) -Force
+                    [void]$expandedEmployments.Add($employment)
                 }
             }
         }
@@ -169,7 +225,7 @@ try{
 
         $person | Add-Member -MemberType NoteProperty -Name 'DisplayName' -Value "$($person.preferred_name)".trim(" ")
         $person | Add-Member -MemberType NoteProperty -Name 'ExternalId'  -Value $person.id
-        $person | Add-Member -MemberType NoteProperty -Name 'Contracts'   -Value @($personEmployments)
+        $person | Add-Member -MemberType NoteProperty -Name 'Contracts'   -Value @($expandedEmployments)
         
         #if($person.ExternalId -eq '34243358'){
         Write-Output ($person | ConvertTo-Json -Depth 20);
